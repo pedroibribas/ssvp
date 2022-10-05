@@ -34,14 +34,19 @@ donator: {
   - [x] Framework front-end? React.js
   - [x] Pré-processador? SASS
 - [ ] Montar back-end <mark>em andamento</mark>
-  - [ ] Setup
-    - [ ] Instalação de pacotes
-      - [ ] dotenv
-      - [ ] express
-      - [ ] express-async-handler
-      - [ ] mongoose
-      - [ ] nodemon
-    - [ ] Design das pastas
+  - [x] Setup
+    - [x] Instalação de pacotes
+      - [x] dotenv
+      - [x] express
+      - [x] express-async-handler
+      - [x] mongoose
+      - [x] nodemon
+    - [x] Atalhos CLI
+    - [x] Variáveis ambiente
+      - [x] NODE_ENV
+      - [x] PORT
+      - [x] MONGO_URI
+    - [x] Design das pastas
   - [ ] Inicializar servidor
   - [ ] Integrar servidor com a database
   - [ ] Servir product
