@@ -3,53 +3,122 @@ const Donation = require("../models/donation");
 
 const getDonations = asyncHandler(async (req, res) => {
   const donations = await Donation.find();
-  res.status(200).json(donations);
+
+  const data = donations.map(donation => (
+    {
+      id: donation._id,
+      title: donation.title,
+      donator: donation.donator
+    }
+  ));
+
+  res.status(200).json(data);
 });
 
-const setDonation = asyncHandler(async (req, res) => {
-  if (!req.donation) {
+const setDonations = asyncHandler(async (req, res) => {
+  const { donations } = req.body;
+
+  if (!donations) {
     res.status(400);
-    throw new Error("Fields missing");
-  };
+    throw new Error("No donation");
+  }
 
-  await Donation.create({ name: req.name });
+  donations.forEach(async (item) => {
+    const { title } = item;
 
-  res.status(201).json({ message: "New donation created" });
+    await Donation.create({
+      title,
+      donator: ""
+    });
+  });
+
+  res.status(201).json({ message: "Donations created" });
+});
+
+const deleteDonation = asyncHandler(async (req, res) => {
+  const donation = await Donation.findById(req.body.id);
+
+  if (!donation) {
+    res.status(400);
+    throw new Error("Donation not found");
+  }
+
+  await donation.remove();
+
+  res.status(200).json({ message: "Donation removed" });
 });
 
 const addDonator = asyncHandler(async (req, res) => {
-  const donation = await Donation.findById(req.params.id);
+  const { name, donations } = req.body
 
-  if (!req.name || !req.phone) {
+  if (!name || name === "") {
     res.status(400);
-    throw new Error("Fields missing");
+    throw new Error("Name is missing");
   };
 
-  if (donation.donator.length !== 0) {
+  const data = await Donation.find();
+
+  let availDonationsNumber = 0;
+  for (let index = 0; index < data.length; index++) {
+    const element = data[index];
+    if (element.donator === "") {
+      availDonationsNumber++
+    };
+  }
+
+  let notCheckedsNumber = 0;
+  for (let index = 0; index < donations.length; index++) {
+    const element = donations[index];
+    if (!element.isChecked) {
+      notCheckedsNumber++
+    };
+  };
+
+  if (availDonationsNumber === notCheckedsNumber) {
     res.status(400);
-    throw new Error("Donator exists");
+    throw new Error("No checked data");
   };
 
-  const data = {
-    name: req.name,
-    phone: req.phone
-  };
+  donations.forEach(async (item) => {
+    const donation = await Donation.findById(item.id);
 
-  donation.donator.push(data);
+    if (item.isChecked && donation.donator === "") {
+      console.log(donation.title, donation.donator);
+      donation.donator = name;
+      donation.save(error => {
+        if (error) {
+          return res.status(400).json({ error });
+        };
+      });
+    };
+  });
 
-  donation.amount = 0;
+  res.status(201).json({ message: `Donator added` });
+});
+
+const deleteDonator = asyncHandler(async (req, res) => {
+  const donation = await Donation.findById(req.body.id);
+
+  if (!donation) {
+    res.status(400);
+    throw new Error("Donation not found");
+  }
+
+  donation.donator = "";
 
   donation.save(error => {
     if (error) {
       return res.status(400).json({ error });
     };
-
-    res.status(201).json({ message: "Donator added" });
   });
+
+  res.status(200).json({ message: `Donator removed` });
 });
 
 module.exports = {
   getDonations,
-  setDonation,
-  addDonator
+  setDonations,
+  deleteDonation,
+  addDonator,
+  deleteDonator
 };
