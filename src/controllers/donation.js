@@ -56,17 +56,8 @@ const addDonator = asyncHandler(async (req, res) => {
     throw new Error("Name is missing");
   };
 
-  const data = await Donation.find();
-
-  let availDonationsNumber = 0;
-  for (let index = 0; index < data.length; index++) {
-    const element = data[index];
-    if (element.donator === "") {
-      availDonationsNumber++
-    };
-  }
-
   let notCheckedsNumber = 0;
+
   for (let index = 0; index < donations.length; index++) {
     const element = donations[index];
     if (!element.isChecked) {
@@ -74,7 +65,9 @@ const addDonator = asyncHandler(async (req, res) => {
     };
   };
 
-  if (availDonationsNumber === notCheckedsNumber) {
+  const data = await Donation.find();
+
+  if (data.length === notCheckedsNumber) {
     res.status(400);
     throw new Error("No checked data");
   };
@@ -82,8 +75,12 @@ const addDonator = asyncHandler(async (req, res) => {
   donations.forEach(async (item) => {
     const donation = await Donation.findById(item.id);
 
+    if (donation.donator !== "") {
+      res.status(400);
+      throw new Error("Donation has donator");
+    };
+
     if (item.isChecked && donation.donator === "") {
-      console.log(donation.title, donation.donator);
       donation.donator = name;
       donation.save(error => {
         if (error) {
