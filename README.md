@@ -1,8 +1,122 @@
-# Índice
+## Rotas
 
-Criar índice
+**Obter doações**
+
+- Rota: `/api/donations`
+- Operação: `GET`
+- Parâmetros: nenhum
+- Corpo da requisição: nenhum
+- Sucesso:
+
+```js
+[
+  {
+    id: /* String */,
+    title: /* String */,
+    donator: /* String */
+  }
+]
+```
 
 ---
+
+**Criar doações**
+
+- Rota: `/api/donations`
+- Operação: `POST`
+- Parâmetros: nenhum
+- Corpo da requisição:
+
+```js
+{
+  donations: [
+    {
+      title: /* String */
+    }
+  ]
+}
+```
+
+- Sucesso:
+
+```js
+{
+  message: 'New donation created'
+}
+```
+
+---
+
+**Deletar doação**
+
+- Rota: `/api/donations`
+- Operação: `DELETE`
+- Parâmetros: nenhum
+- Corpo da requisição:
+
+```js
+{
+  id: /* String */
+}
+```
+
+- Sucesso:
+
+```js
+{
+  message: 'Donation removed'
+}
+```
+
+---
+
+**Adicionar doador**
+
+- Rota: `/api/donations/donator`
+- Operação: `POST`
+- Parâmetros: nenhum
+- Corpo da requisição:
+
+```js
+{
+  name: /* String */,
+  donations: [
+    {
+      id: /* String */,
+      isChecked: /* Boolean */,
+    }
+  ]
+}
+```
+
+- Sucesso:
+
+```js
+{
+  message: 'Donator added'
+}
+```
+
+**Remover doador**
+
+- Rota: `/api/donations/donator`
+- Operação: `DELETE`
+- Parâmetros: nenhum
+- Corpo da requisição:
+
+```js
+{
+  id: /* String */
+}
+```
+
+- Sucesso:
+
+```js
+{
+  message: 'Donator removed'
+}
+```
 
 # Desenvolvimento
 
@@ -10,7 +124,8 @@ Criar índice
 
 - [x] Partida
   - [x] Base de dados? MongoDb
-  - [x] Framework back-end? Node.js
+  - [x] Framework back-end? Node.js, Express.js
+  - [ ] Hospedagem? Railway
   - [x] Setup do back-end
     - [x] Instalação de pacotes
       - [x] dotenv
@@ -28,7 +143,11 @@ Criar índice
 - [x] Montar back-end <mark>em andamento</mark>
   - [x] Inicializar servidor
   - [x] Integrar servidor com a database
-  - [x] Servir product
-    - [x] Criar esquema do product
+  - [x] Servir dados
+    - [x] Criar esquema Donation
     - [x] Criar roteamento
     - [x] Criar controladores
+- [ ] Deploy
+
+- [ ] Limpar importação dos controladores no app.js
+- [ ] Limpar código dos controladores => as funções estão assíncronas

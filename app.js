@@ -1,11 +1,14 @@
 const express = require("express");
 const dotenv = require("dotenv").config();
 const mongoose = require('mongoose');
-const { getDonations, setDonation, addDonator } = require("./src/controllers/donation");
+const { getDonations, addDonator, deleteDonation, setDonations, deleteDonator } = require("./src/controllers/donation");
 
 const PORT = process.env.PORT || 5000;
 
 const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // # MongoDb connection
 
@@ -15,11 +18,16 @@ mongoose.connection.on("error", error => console.log(error));
 
 // # Routing
 
-app.route("/donations").get(getDonations).post(setDonation);
+app
+  .route('/api/donations')
+  .get(getDonations)
+  .post(setDonations)
+  .delete(deleteDonation);
 
-app.route("/donations/:id").post(addDonator);
-
-// # Serve UI
+app
+  .route("/api/donations/donator")
+  .post(addDonator)
+  .delete(deleteDonator);
 
 // # Init server
 
