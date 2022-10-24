@@ -1,37 +1,46 @@
 ## Rotas
 
-**Obter doações**
+**Obter listas**
 
-- Rota: `/api/donations`
+- Rota: `/api/lists`
+- Acesso: Privado
 - Operação: `GET`
 - Parâmetros: nenhum
 - Corpo da requisição: nenhum
 - Sucesso:
 
-```js
+```json
 [
   {
-    id: /* String */,
-    title: /* String */,
-    donator: /* String */
+    "id": /* String */,
+    "manager": /* String */,
+    "items": [
+      {
+        "id": /* String */,
+        "title": /* String */,
+        "donator": /* String */
+      }
+    ]
   }
 ]
 ```
 
 ---
 
-**Criar doações**
+**Criar lista**
 
-- Rota: `/api/donations`
+- Rota: `/api/lists`
+- Acesso: Privado
 - Operação: `POST`
 - Parâmetros: nenhum
 - Corpo da requisição:
 
-```js
+```json
 {
-  donations: [
+  "manager": /* String */,
+  "items": [
     {
-      title: /* String */
+      "title": /* String */
     }
   ]
 }
@@ -39,9 +48,77 @@
 
 - Sucesso:
 
-```js
+```json
 {
-  message: 'New donation created'
+  "message": "List created"
+}
+```
+
+---
+
+**Obter lista**
+
+- Rota: `/api/lists/:id`
+- Acesso: Público
+- Operação: `GET`
+- Parâmetros: `:id` da página
+- Corpo da requisição: nenhum
+
+- Sucesso:
+
+```json
+{
+  "id": /* String */,
+  "manager": /* String */,
+  "items": [
+    {
+      "id": /* String */,
+      "title": /* String */,
+      "donator": /* String */
+    }
+  ]
+}
+```
+
+---
+
+**Adicionar doação**
+
+- Rota: `/api/lists:id`
+- Acesso: Privado
+- Operação: `POST`
+- Parâmetros: nenhum
+- Corpo da requisição:
+
+```json
+  {
+    "title": /* String */
+  }
+```
+
+- Sucesso:
+
+```json
+{
+  "message": "Donation added"
+}
+```
+
+---
+
+**Deletar lista**
+
+- Rota: `/api/lists/:id`
+- Acesso: Privado
+- Operação: `DELETE`
+- Parâmetros: `:id` da página
+- Corpo da requisição: Auth
+
+- Sucesso:
+
+```json
+{
+  "message": "List removed"
 }
 ```
 
@@ -49,22 +126,17 @@
 
 **Deletar doação**
 
-- Rota: `/api/donations`
+- Rota: `/api/lists/:listId/donations/:itemId`
+- Acesso: Privado
 - Operação: `DELETE`
-- Parâmetros: nenhum
-- Corpo da requisição:
-
-```js
-{
-  id: /* String */
-}
-```
+- Parâmetros: `listId`, `itemId`
+- Corpo da requisição: Auth
 
 - Sucesso:
 
-```js
+```json
 {
-  message: 'Donation removed'
+  "message": "Donation removed"
 }
 ```
 
@@ -72,18 +144,19 @@
 
 **Adicionar doador**
 
-- Rota: `/api/donations/donator`
+- Rota: `/api/lists/:id/donations`
+- Acesso: Público
 - Operação: `POST`
 - Parâmetros: nenhum
 - Corpo da requisição:
 
-```js
+```json
 {
-  name: /* String */,
-  donations: [
+  "name": /* String */,
+  "donations": [
     {
-      id: /* String */,
-      isChecked: /* Boolean */,
+      "id": /* String */,
+      "isChecked": /* Boolean */,
     }
   ]
 }
@@ -91,24 +164,19 @@
 
 - Sucesso:
 
-```js
+```json
 {
-  message: 'Donator added'
+  "message": "Donator added"
 }
 ```
 
 **Remover doador**
 
-- Rota: `/api/donations/donator`
-- Operação: `DELETE`
-- Parâmetros: nenhum
-- Corpo da requisição:
-
-```js
-{
-  id: /* String */
-}
-```
+- Rota: `/api/lists/:id/donations/:itemId/donator`
+- Acesso: Privado
+- Operação: `Delete`
+- Parâmetros: `listId`, `itemId`
+- Corpo da requisição: Auth
 
 - Sucesso:
 
@@ -140,14 +208,19 @@
       - [x] MONGO_URI
     - [x] Design das pastas
     - [x] Criar .gitignore
-- [x] Montar back-end <mark>em andamento</mark>
+- [x] Montar back-end
   - [x] Inicializar servidor
   - [x] Integrar servidor com a database
   - [x] Servir dados
-    - [x] Criar esquema Donation
+    - [x] Criar esquema List
     - [x] Criar roteamento
     - [x] Criar controladores
+  - [ ] Servir dados
+    - [ ] Criar esquema User
+    - [ ] Criar roteamento
+    - [ ] Criar controladores
 - [ ] Deploy
 
+- [x] Tratar erro de simultaneidade
+- [x] Refatorar rota de exclusão de doador
 - [ ] Limpar importação dos controladores no app.js
-- [ ] Limpar código dos controladores => as funções estão assíncronas

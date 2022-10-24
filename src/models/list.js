@@ -7,4 +7,9 @@ const donationSchema = new Schema({
   donator: String
 });
 
-module.exports = mongoose.model("Donation", donationSchema);
+const listSchema = new Schema({
+  manager: String,
+  items: [donationSchema]
+});
+
+module.exports = mongoose.model("List", listSchema);

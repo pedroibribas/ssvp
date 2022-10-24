@@ -1,8 +1,17 @@
 const express = require("express");
 const mongoose = require('mongoose');
 const cors = require('cors');
+const {
+  getLists,
+  setList,
+  getList,
+  deleteList,
+  addDonator,
+  deleteDonator,
+  deleteDonation,
+  addDonation
+} = require('./src/controllers/list');
 const dotenv = require("dotenv").config();
-const { getDonations, addDonator, deleteDonation, setDonations, deleteDonator } = require("./src/controllers/donation");
 
 const PORT = process.env.PORT || 5000;
 
@@ -20,15 +29,18 @@ mongoose.connection.on("error", error => console.log(error));
 
 // # Routing
 
+app.route('/api/lists').get(getLists).post(setList);
+
+app.route("/api/lists/:id").get(getList).post(addDonation).delete(deleteList);
+
+app.route("/api/lists/:id/donations").post(addDonator);
+
 app
-  .route('/api/donations')
-  .get(getDonations)
-  .post(setDonations)
+  .route("/api/lists/:listId/donations/:itemId")
   .delete(deleteDonation);
 
 app
-  .route("/api/donations/donator")
-  .post(addDonator)
+  .route("/api/lists/:listId/donations/:itemId/donator")
   .delete(deleteDonator);
 
 // # Init server
