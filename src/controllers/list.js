@@ -2,9 +2,9 @@ const asyncHandler = require('express-async-handler');
 const List = require("../models/list");
 
 const getLists = asyncHandler(async (req, res) => {
-  const lists = await List.find();
+  const lists = await List.find({ user: req.user.id });
 
-  const data = lists.map(list => {
+  const formattedLists = lists.map(list => {
     const items = list.items.map(donation => ({
       id: donation._id,
       title: donation.title,
@@ -18,10 +18,17 @@ const getLists = asyncHandler(async (req, res) => {
     });
   });
 
-  res.status(200).json(data);
+  res.status(200).json(formattedLists);
 });
 
 const setList = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+
+  if (!id) {
+    res.status(400);
+    throw new Error("No user");
+  };
+
   const { manager, items } = req.body;
 
   if (!manager || manager === "") {
@@ -53,12 +60,13 @@ const setList = asyncHandler(async (req, res) => {
     donator: ""
   }));
 
-  const data = {
+  const listData = {
     manager: manager || "",
-    items: formattedItems
+    items: formattedItems,
+    user: id
   };
 
-  await List.create(data);
+  await List.create(listData);
 
   res.status(201).json({ message: "List created" });
 });
@@ -83,6 +91,13 @@ const getList = asyncHandler(async (req, res) => {
 
 const addDonation = asyncHandler(async (req, res) => {
   const list = await List.findById(req.params.id);
+
+  const isAuthorized = req.user.id === list.user.toString();
+
+  if (!isAuthorized) {
+    res.status(401);
+    throw new Error('User is not authorized');
+  };
 
   const { title } = req.body;
 
@@ -110,6 +125,13 @@ const deleteList = asyncHandler(async (req, res) => {
     throw new Error("List not found");
   }
 
+  const isAuthorized = req.user.id === list.user.toString();
+
+  if (!isAuthorized) {
+    res.status(401);
+    throw new Error('User is not authorized');
+  };
+
   await list.remove();
 
   res.status(200).json({ message: "List removed" });
@@ -121,6 +143,13 @@ const deleteDonation = asyncHandler(async (req, res) => {
   if (!list) {
     res.status(400);
     throw new Error("List not found");
+  };
+
+  const isAuthorized = req.user.id === list.user.toString();
+
+  if (!isAuthorized) {
+    res.status(401);
+    throw new Error('User is not authorized');
   };
 
   const donation = list.items.id(req.params.itemId);
@@ -142,9 +171,16 @@ const deleteDonation = asyncHandler(async (req, res) => {
 });
 
 const addDonator = asyncHandler(async (req, res) => {
-  const { name, donations } = req.body
-
   const list = await List.findById(req.params.id);
+
+  const isAuthorized = req.user.id === list.user.toString();
+
+  if (!isAuthorized) {
+    res.status(401);
+    throw new Error('User is not authorized');
+  };
+
+  const { name, donations } = req.body
 
   if (!name || name === "") {
     res.status(400);
@@ -195,6 +231,13 @@ const addDonator = asyncHandler(async (req, res) => {
 
 const deleteDonator = asyncHandler(async (req, res) => {
   const list = await List.findById(req.params.listId);
+
+  const isAuthorized = req.user.id === list.user.toString();
+
+  if (!isAuthorized) {
+    res.status(401);
+    throw new Error('User is not authorized');
+  };
 
   const donation = list.items.id(req.params.itemId);
 

@@ -1,5 +1,9 @@
 ## Rotas
 
+### User
+
+### List
+
 **Obter listas**
 
 - Rota: `/api/lists`
@@ -215,10 +219,10 @@
     - [x] Criar esquema List
     - [x] Criar roteamento
     - [x] Criar controladores
-  - [ ] Servir dados
-    - [ ] Criar esquema User
-    - [ ] Criar roteamento
-    - [ ] Criar controladores
+    - [x] Criar esquema User
+    - [x] Criar roteamento
+    - [x] Criar controladores
+  - [x] Proteger rotas
 - [ ] Deploy
 
 - [x] Tratar erro de simultaneidade

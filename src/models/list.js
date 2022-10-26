@@ -7,9 +7,18 @@ const donationSchema = new Schema({
   donator: String
 });
 
-const listSchema = new Schema({
-  manager: String,
-  items: [donationSchema]
-});
+const listSchema = new Schema(
+  {
+    manager: String,
+    items: [donationSchema],
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }
+  },
+  {
+    timestamp: true
+  }
+);
 
 module.exports = mongoose.model("List", listSchema);
