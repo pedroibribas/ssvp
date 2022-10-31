@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require("dotenv").config();
+const path = require("path");
 
 const PORT = process.env.PORT || 5000;
 
@@ -22,6 +23,20 @@ mongoose.connection.on("error", error => console.log(error));
 app.use("/api/users", require("./src/routes/user"));
 
 app.use("/api/lists", require("./src/routes/list"));
+
+// # Run front-end
+
+if (process.env.NODE_ENV === 'development') {
+    app.use(express.static(path.join(__dirname, '../client/build')));
+
+    app.get('*', (req, res) =>
+        res.sendFile(
+            path.resolve(__dirname, '../', 'client', 'build', 'index.html')
+        )
+    );
+} else {
+    app.get('/', (req, res) => res.send('Server runs client only on development environment'));
+};
 
 // # Init
 
