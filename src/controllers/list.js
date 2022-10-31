@@ -173,13 +173,6 @@ const deleteDonation = asyncHandler(async (req, res) => {
 const addDonator = asyncHandler(async (req, res) => {
   const list = await List.findById(req.params.id);
 
-  const isAuthorized = req.user.id === list.user.toString();
-
-  if (!isAuthorized) {
-    res.status(401);
-    throw new Error('User is not authorized');
-  };
-
   const { name, donations } = req.body
 
   if (!name || name === "") {
