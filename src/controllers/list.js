@@ -1,93 +1,76 @@
 const asyncHandler = require('express-async-handler');
 const List = require("../models/list");
 
-const getLists = asyncHandler(async (req, res) => {
-  const lists = await List.find({ user: req.user.id });
-
-  const formattedLists = lists.map(list => {
-    const items = list.items.map(donation => ({
-      id: donation._id,
-      title: donation.title,
-      donator: donation.donator
-    }))
-
-    return ({
-      id: list._id,
-      manager: list.manager,
-      items
+const getLists = (req, res, next) => {
+  try {
+    List.find({ user: req.user }, (error, lists) => {
+      if (error) {
+        res.status(400).send({ message: "Erro na base de dados", error: error.message });
+      } else {
+        res.status(200).json({ message: "Sucesso", data: lists });
+      }
     });
-  });
+  } catch (error) {
+    next(error);
+  }
+};
 
-  res.status(200).json(formattedLists);
-});
+const createList = (req, res, next) => {
+  try {
+    const list = new List({ ...req.body, user: req.user.id });
+    list.save((error) => {
+      if (error) {
+        res.status(400).send({ message: "Erro na base de dados", error: error.message });
+      } else {
+        res.status(201).send({ message: "Lista criada" });
+      }
+    })
+  } catch (err) {
+    next(err);
+  }
+}
 
-const setList = asyncHandler(async (req, res) => {
-  const { id } = req.user;
+const getListById = (req, res) => {
+  try {
+    List.findById(req.params.id, (error, list) => {
+      if (error) {
+        req.status(400).send({ message: "Erro na base de dados", error: error.message });
+      } else if (!list) {
+        res.status(400).send({ message: "Nenhuma lista encontrada pelo ID fornecido" });
+      } else if (list.user.toString() !== req.user.id) {
+        res.status(401).send({ message: "Usuário não autorizado" });
+      } else {
+        res.status(200).json(list);
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
-  if (!id) {
-    res.status(400);
-    throw new Error("No user");
-  };
-
-  const { manager, items } = req.body;
-
-  if (!manager || manager === "") {
-    res.status(400);
-    throw new Error("No manager");
-  };
-
-  if (!items) {
-    res.status(400);
-    throw new Error("No donations");
-  };
-
-  let emptyFields = 0;
-
-  for (let index = 0; index < items.length; index++) {
-    const element = items[index];
-    if (!element.title || element.title === "") {
-      emptyFields++
-    };
-  };
-
-  if (emptyFields > 0) {
-    res.status(400);
-    throw new Error("Has empty fields");
-  };
-
-  const formattedItems = items.map(item => ({
-    title: item.title,
-    donator: ""
-  }));
-
-  const listData = {
-    manager: manager || "",
-    items: formattedItems,
-    user: id
-  };
-
-  await List.create(listData);
-
-  res.status(201).json({ message: "List created" });
-});
-
-const getList = asyncHandler(async (req, res) => {
-  const list = await List.findById(req.params.id);
-
-  const items = list.items.map(donation => ({
-    id: donation._id,
-    title: donation.title,
-    donator: donation.donator
-  }));
-
-  const data = {
-    id: list._id,
-    manager: list.manager,
-    items
-  };
-
-  res.status(200).json(data);
-});
+const updateList = (req, res, next) => {
+  if (req.body.items) {
+    res.status(400).send({ status: "Erro", message: "Operação para atualizar doações não permitida" });
+  } else {
+    List.findByIdAndUpdate(req.params.id, {
+      $set: req.body
+    }, (error, list) => {
+      try {
+        if (!list) {
+          res.status(400).send({ message: "Lista não encontrada", error: error.message });
+        } else if (list.user.toString() !== req.user.id) {
+          res.status(401).send({ message: "Usuário não autorizado" });
+        } else if (error) {
+          res.status(400).send({ message: "Erro na base de dados", error: error.message });
+        } else {
+          res.status(200).send({ message: "Lista atualizada" });
+        }
+      } catch (err) {
+        next(err);
+      }
+    })
+  }
+}
 
 const addDonation = asyncHandler(async (req, res) => {
   const list = await List.findById(req.params.id);
@@ -251,11 +234,12 @@ const deleteDonator = asyncHandler(async (req, res) => {
 
 module.exports = {
   getLists,
-  setList,
-  getList,
+  createList,
+  getListById,
   deleteList,
   addDonation,
   deleteDonation,
   addDonator,
-  deleteDonator
+  deleteDonator,
+  updateList
 };

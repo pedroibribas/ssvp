@@ -2,22 +2,34 @@ const mongoose = require("mongoose");
 
 const { Schema } = mongoose;
 
-const donationSchema = new Schema({
-  title: String,
-  donator: String
-});
-
 const listSchema = new Schema(
   {
-    manager: String,
-    items: [donationSchema],
+    manager: {
+      type: String,
+      required: true
+    },
+    items: [{
+      title: {
+        type: String,
+        required: true
+      },
+      donator: {
+        type: String,
+        default: ""
+      }
+    }],
+    text: {
+      type: String,
+      required: true
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
+      required: true
     }
   },
   {
-    timestamp: true
+    timestamps: true,
   }
 );
 
