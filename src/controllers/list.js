@@ -13,7 +13,7 @@ const getLists = (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
+}
 
 const createList = (req, res, next) => {
   try {
@@ -30,7 +30,7 @@ const createList = (req, res, next) => {
   }
 }
 
-const getListById = (req, res) => {
+const getListById = (req, res, next) => {
   try {
     List.findById(req.params.id, (error, list) => {
       if (error) {
@@ -46,7 +46,7 @@ const getListById = (req, res) => {
   } catch (err) {
     next(err);
   }
-};
+}
 
 const updateList = (req, res, next) => {
   if (req.body.items) {
@@ -98,7 +98,66 @@ const addDonation = asyncHandler(async (req, res) => {
 
     res.status(201).json({ message: "Donation added" });
   });
-});
+})
+
+const updateDonation = (req, res, next) => {
+  try {
+    List.findOneAndUpdate({
+      "id": req.params.listId,
+      "items._id": req.params.donationId
+    }, {
+      "$set": {
+        "items.$.title": req.body.title,
+        "items.$.donator": req.body.donator
+      }
+    }, (err, parent) => {
+      if (!parent) {
+        res.status(400).send({ message: "Nenhuma lista encontrada" });
+      } else if (parent.user.toString() !== req.user.id) {
+        res.status(401).send({ message: "Usuário não autorizado" });
+      } else if (err) {
+        res.status(400).send({ message: "Erro na base de dados", error: err.message });
+      } else {
+        res.status(201).send({ message: "Doação atualizada" });
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+const deleteDonation = asyncHandler(async (req, res) => {
+  const list = await List.findById(req.params.listId);
+
+  if (!list) {
+    res.status(400);
+    throw new Error("List not found");
+  };
+
+  const isAuthorized = req.user.id === list.user.toString();
+
+  if (!isAuthorized) {
+    res.status(401);
+    throw new Error('User is not authorized');
+  };
+
+  const donation = list.items.id(req.params.donationId);
+
+  if (!donation) {
+    res.status(400);
+    throw new Error("Donation not found");
+  };
+
+  await donation.remove();
+
+  list.save(error => {
+    if (error) {
+      return res.status(400).json({ error });
+    };
+
+    res.status(200).json({ message: "Donation removed" });
+  });
+})
 
 const deleteList = asyncHandler(async (req, res) => {
   const list = await List.findById(req.params.id);
@@ -118,128 +177,17 @@ const deleteList = asyncHandler(async (req, res) => {
   await list.remove();
 
   res.status(200).json({ message: "List removed" });
-});
+})
 
-const deleteDonation = asyncHandler(async (req, res) => {
-  const list = await List.findById(req.params.listId);
-
-  if (!list) {
-    res.status(400);
-    throw new Error("List not found");
-  };
-
-  const isAuthorized = req.user.id === list.user.toString();
-
-  if (!isAuthorized) {
-    res.status(401);
-    throw new Error('User is not authorized');
-  };
-
-  const donation = list.items.id(req.params.itemId);
-
-  if (!donation) {
-    res.status(400);
-    throw new Error("Donation not found");
-  };
-
-  await donation.remove();
-
-  list.save(error => {
-    if (error) {
-      return res.status(400).json({ error });
-    };
-
-    res.status(200).json({ message: "Donation removed" });
-  });
-});
-
-const addDonator = asyncHandler(async (req, res) => {
-  const list = await List.findById(req.params.id);
-
-  const { name, donations } = req.body
-
-  if (!name || name === "") {
-    res.status(400);
-    throw new Error("Name is missing");
-  };
-
-  let notCheckeds = 0;
-
-  for (let index = 0; index < donations.length; index++) {
-    const element = donations[index];
-    if (!element.isChecked) {
-      notCheckeds++
-    };
-  };
-
-  if (list.items.length === notCheckeds) {
-    res.status(400);
-    throw new Error("No checked data");
-  };
-
-  let hasDonator = [];
-
-  donations.forEach(async (item) => {
-    const donation = list.items.id(item.id);
-
-    if (item.isChecked && donation.donator !== "") {
-      hasDonator.push(true);
-    };
-
-    if (item.isChecked && donation.donator === "") {
-      donation.donator = name;
-    };
-  });
-
-  if (hasDonator.length > 0) {
-    res.status(400);
-    throw new Error("Only one donator allowed");
-  };
-
-  list.save(error => {
-    if (error) {
-      return res.status(400).json({ error });
-    };
-
-    res.status(201).json({ message: `Donator added` });
-  });
-});
-
-const deleteDonator = asyncHandler(async (req, res) => {
-  const list = await List.findById(req.params.listId);
-
-  const isAuthorized = req.user.id === list.user.toString();
-
-  if (!isAuthorized) {
-    res.status(401);
-    throw new Error('User is not authorized');
-  };
-
-  const donation = list.items.id(req.params.itemId);
-
-  if (!donation) {
-    res.status(400);
-    throw new Error("Donation not found");
-  }
-
-  donation.donator = "";
-
-  list.save(error => {
-    if (error) {
-      return res.status(400).json({ error });
-    };
-    res.status(200).json({ message: `Donator removed` });
-  });
-});
-
-module.exports = {
+const ListController = {
   getLists,
   createList,
   getListById,
-  deleteList,
+  updateList,
   addDonation,
+  updateDonation,
   deleteDonation,
-  addDonator,
-  deleteDonator,
-  updateList
+  deleteList
 };
+
+module.exports = { ListController };
