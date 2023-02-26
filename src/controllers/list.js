@@ -46,6 +46,25 @@ const getListById = (req, res, next) => {
   }
 }
 
+const getUserListById = (req, res, next) => {
+  try {
+    List.findById(req.params.id,
+      (error, list) => {
+        if (error) {
+          req.status(400).send({ message: "Erro na base de dados", error: error.message });
+        } else if (!list) {
+          res.status(400).send({ message: "Nenhuma lista encontrada pelo ID fornecido" });
+        } else if (list.user.toString() !== req.user.id) {
+          res.status(401).send({ message: "Usuário não autorizado" });
+        } else {
+          res.status(200).json(list);
+        }
+      });
+  } catch (err) {
+    next(err);
+  }
+}
+
 const updateList = (req, res, next) => {
   if (req.body.items) {
     res.status(400).send({ status: "Erro", message: "Operação para atualizar doações não permitida" });
@@ -124,6 +143,29 @@ const updateDonation = (req, res, next) => {
   }
 }
 
+const updateDonator = (req, res, next) => {
+  try {
+    List.findOneAndUpdate({
+      "id": req.params.listId,
+      "items._id": req.params.donationId
+    }, {
+      "$set": {
+        "items.$.donator": req.body.donator
+      }
+    }, (err, parent) => {
+      if (!parent) {
+        res.status(400).send({ message: "Nenhuma lista encontrada" });
+      } else if (err) {
+        res.status(400).send({ message: "Erro na base de dados", error: err.message });
+      } else {
+        res.status(201).send({ message: "Doação atualizada" });
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 const deleteDonation = asyncHandler(async (req, res) => {
   const list = await List.findById(req.params.listId);
 
@@ -180,8 +222,10 @@ const deleteList = asyncHandler(async (req, res) => {
 const ListController = {
   getLists,
   createList,
+  getUserListById,
   getListById,
   updateList,
+  updateDonator,
   addDonation,
   updateDonation,
   deleteDonation,
