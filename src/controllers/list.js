@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
 const List = require("../models/list");
 
@@ -31,6 +32,7 @@ const createList = (req, res, next) => {
 }
 
 const getListById = (req, res, next) => {
+  validateObjectId(req.params.id);
   try {
     List.findById(req.params.id, (error, list) => {
       if (error) {
@@ -47,6 +49,7 @@ const getListById = (req, res, next) => {
 }
 
 const getUserListById = (req, res, next) => {
+  validateObjectId(req.params.id);
   try {
     List.findById(req.params.id,
       (error, list) => {
@@ -66,6 +69,7 @@ const getUserListById = (req, res, next) => {
 }
 
 const updateList = (req, res, next) => {
+  validateObjectId(req.params.id);
   if (req.body.items) {
     res.status(400).send({ status: "Erro", message: "Operação para atualizar doações não permitida" });
   } else {
@@ -90,6 +94,8 @@ const updateList = (req, res, next) => {
 }
 
 const addDonation = asyncHandler(async (req, res) => {
+  validateObjectId(req.params.id);
+
   const list = await List.findById(req.params.id);
 
   const isAuthorized = req.user.id === list.user.toString();
@@ -118,6 +124,8 @@ const addDonation = asyncHandler(async (req, res) => {
 })
 
 const updateDonation = (req, res, next) => {
+  validateObjectId(req.params.listId);
+  validateObjectId(req.params.donationId);
   try {
     List.findOneAndUpdate({
       "id": req.params.listId,
@@ -144,6 +152,8 @@ const updateDonation = (req, res, next) => {
 }
 
 const updateDonator = (req, res, next) => {
+  validateObjectId(req.params.listId);
+  validateObjectId(req.params.donationId);
   try {
     List.findOneAndUpdate({
       "id": req.params.listId,
@@ -166,40 +176,39 @@ const updateDonator = (req, res, next) => {
   }
 }
 
-const deleteDonation = asyncHandler(async (req, res) => {
-  const list = await List.findById(req.params.listId);
-
-  if (!list) {
-    res.status(400);
-    throw new Error("List not found");
-  };
-
-  const isAuthorized = req.user.id === list.user.toString();
-
-  if (!isAuthorized) {
-    res.status(401);
-    throw new Error('User is not authorized');
-  };
-
-  const donation = list.items.id(req.params.donationId);
-
-  if (!donation) {
-    res.status(400);
-    throw new Error("Donation not found");
-  };
-
-  await donation.remove();
-
-  list.save(error => {
-    if (error) {
-      return res.status(400).json({ error });
-    };
-
-    res.status(200).json({ message: "Donation removed" });
-  });
-})
+const deleteDonation = (req, res) => {
+  validateObjectId(req.params.listId);
+  validateObjectId(req.params.donationId);
+  try {
+    List.findById(req.params.listId, (error, list) => {
+      if (error) {
+        req.status(400).send({ message: "Erro MongoDb - Find", error: error.message });
+      } else if (!list) {
+        res.status(400).send({ message: "Nenhuma lista encontrada na base de dados para a doação selecionada" });
+      } else if (list.user.toString() !== req.user.id) {
+        res.status(401).send({ message: "Usuário não autorizado" });
+      } else {
+        list.items.id(req.params.donationId).remove((err) => {
+          if (err) {
+            res.status(400).send({ message: "Erro MongoDb - Remove", error: err.message });
+          }
+        });
+        list.save((err) => {
+          if (err) {
+            res.status(400).send({ message: "Erro MongoDb - Save", error: err.message });
+          }
+        });
+        res.status(200).json({ message: "Doação removida" });
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
 
 const deleteList = asyncHandler(async (req, res) => {
+  validateObjectId(req.params.id);
+
   const list = await List.findById(req.params.id);
 
   if (!list) {
@@ -218,6 +227,12 @@ const deleteList = asyncHandler(async (req, res) => {
 
   res.status(200).json({ message: "List removed" });
 })
+
+const validateObjectId = (objectId) => {
+  if (!mongoose.Types.ObjectId.isValid(objectId)) {
+    throw new Error("Mongoose ObjectId inválido");
+  }
+}
 
 const ListController = {
   getLists,
