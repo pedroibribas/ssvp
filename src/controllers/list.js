@@ -37,8 +37,6 @@ const getListById = (req, res, next) => {
         req.status(400).send({ message: "Erro na base de dados", error: error.message });
       } else if (!list) {
         res.status(400).send({ message: "Nenhuma lista encontrada pelo ID fornecido" });
-      } else if (list.user.toString() !== req.user.id) {
-        res.status(401).send({ message: "Usuário não autorizado" });
       } else {
         res.status(200).json(list);
       }

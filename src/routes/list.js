@@ -4,14 +4,18 @@ const { protect } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.route('/').get(protect, ListController.getLists).post(protect, ListController.createList);
+router.route('/')
+  .get(protect, ListController.getLists)
+  .post(protect, ListController.createList);
 
 router.route('/:id')
-  .get(protect, ListController.getListById)
+  .get(ListController.getListById)
   .post(protect, ListController.addDonation)
   .put(protect, ListController.updateList)
   .delete(protect, ListController.deleteList);
 
-router.route("/:listId/:donationId").put(protect, ListController.updateDonation).delete(protect, ListController.deleteDonation);
+router.route("/:listId/:donationId")
+  .put(protect, ListController.updateDonation)
+  .delete(protect, ListController.deleteDonation);
 
 module.exports = router;
